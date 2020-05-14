@@ -14,6 +14,7 @@ const TemplateAssembler = require('../../../lib/template-assembler');
 const Url = require('url');
 const Utils = require('../../lib/utils');
 const Wreck = require('wreck');
+const StorefrontConfig = require('stencil-cli-storefront-plugin').getInstance();
 const internals = {
     options: {},
     cacheTTL: 1000 * 15, // 15 seconds
@@ -63,6 +64,15 @@ internals.sha1sum = function (input) {
     return Crypto.createHash('sha1').update(JSON.stringify(input)).digest('hex');
 };
 
+internals.getUrlObject = function(request) {
+    const staplerUrlObject = request.app.staplerUrl ? Url.parse(request.app.staplerUrl) : Url.parse(request.app.storeUrl);
+    const site = StorefrontConfig.getConfig().site;
+    if (site) {
+        staplerUrlObject.host = site;
+    }
+    return staplerUrlObject;
+}
+
 /**
  * Fetches data from Stapler
  *
@@ -70,7 +80,7 @@ internals.sha1sum = function (input) {
  * @param callback
  */
 internals.getResponse = function (request, callback) {
-    const staplerUrlObject = request.app.staplerUrl ? Url.parse(request.app.staplerUrl) : Url.parse(request.app.storeUrl);
+    const staplerUrlObject = internals.getUrlObject(request);
     const urlObject = _.clone(request.url, true);
     const httpOpts = {
         rejectUnauthorized: false,
@@ -442,6 +452,8 @@ internals.getHeaders = function (request, options, config) {
         'stencil-version': Pkg.config.stencil_version,
         'stencil-options': JSON.stringify(Hoek.applyToDefaults(options, currentOptions)),
         'accept-encoding': 'identity',
+        'accept-language': StorefrontConfig.getConfig().language,
+        'x-bc-upstream': 'storefront',
     };
 
     if (internals.options.accessToken) {

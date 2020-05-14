@@ -22,6 +22,7 @@ var browserSyncPort;
 var templatePath = Path.join(themePath, 'templates');
 var dotStencilFilePath = Path.join(themePath, '.stencil');
 var themeConfigPath = Path.join(themePath, 'config.json');
+var StorefrontConfig = require("stencil-cli-storefront-plugin").getInstance();
 var dotStencilFile;
 var stencilServerPort;
 var themeConfig;
@@ -196,7 +197,6 @@ function startServer() {
 
         Bs.watch('.config/storefront.json', (event, file) => {
             if (event === 'change') {
-                console.log("storefront json changed");
                 Bs.emitter.emit("storefront_config_file:changed", {
                     event: event,
                     path: file,
@@ -234,6 +234,7 @@ function startServer() {
         else { tunnel = Program.tunnel; }
 
         Bs.init({
+            plugins: ["stencil-cli-storefront-plugin"],
             open: !!Program.open,
             port: browserSyncPort,
             files: watchFiles.map(val => Path.join(themePath, val)),
